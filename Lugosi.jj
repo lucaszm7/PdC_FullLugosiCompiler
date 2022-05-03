@@ -28,12 +28,15 @@ TOKEN :
 | <INTEIRO: "int">
 | <BOOLEANO: "bool">
 | <FLOAT: "float">
+| <VOID: "void">
 | <IF : "if">
 | <DO : "do">
 | <WHILE : "while">
 | <RETURN : "return">
 | <FUNCAO : "function">
 | <PRINT : "print">
+| <VERDADEIRO: "true">
+| <FALSO: "false">
 }
 
 // OPERACOES
@@ -60,6 +63,7 @@ TOKEN :
 | <FPARENTES: ")">
 | <PONTOEVIRGULA: ";">
 | <DOISPONTOS: ":">
+| <VIRGULA: ",">
 }
 
 // EXPRESSÕES REGULARES
@@ -72,51 +76,173 @@ TOKEN :
 // EXPRESSÕES REGULARES DERIVADAS
 TOKEN :
 {
-  <FRACALOPCIONAL: (["."]<NUM>)?>
-| <EXPOENTEOPCIONAL: (["e","E"](["+","-"])?<NUM>)>
-| <NUMREAL: <NUM><FRACALOPCIONAL><EXPOENTEOPCIONAL>>
+  <FRACALOPCIONAL: ( "." <NUM> )?>
+| <EXPOENTEOPCIONAL: ("E" ( "+" | "-" )? <NUM>)?>
+| <NUMREAL: <NUM> <FRACALOPCIONAL> <EXPOENTEOPCIONAL>>
 }
 
-void Lugosi () 
-  :
-{Token t;}
-{ (
-      <MAIN>          { System.out.println("Palavra reservada: main"); }
-|     <VARIAVEL>      { System.out.println("Palavra reservada: var"); }
-|     <INTEIRO>       { System.out.println("Palavra reservada: int"); }
-|     <BOOLEANO>      { System.out.println("Palavra reservada: bool"); }
-|     <FLOAT>      { System.out.println("Palavra reservada: float"); }
-|     <IF>            { System.out.println("Palavra reservada: if"); }
-|     <DO>            { System.out.println("Palavra reservada: do"); }
-|     <WHILE >        { System.out.println("Palavra reservada: while"); }
-|     <RETURN>        { System.out.println("Palavra reservada: return"); }
-|     <FUNCAO >       { System.out.println("Palavra reservada: function"); }
-|     <PRINT >        { System.out.println("Palavra reservada: print"); }
-|     <ADICAO >       { System.out.println("Operacao: Adicao (+)"); }
-|     <SUBTRACAO >    { System.out.println("Operacao: Substracao (-)"); }
-|     <MULTIPLICACAO> { System.out.println("Operacao: Multiplicacao (*)"); }
-|     <DIVISAO >      { System.out.println("Operacao: Divisao (/)"); }
-|     <ELOGICO >      { System.out.println("Operacao: E logico (&&)"); }
-|     <OULOGICO >     { System.out.println("Operacao: OU logico (||)"); }
-|     <MENORQUE >     { System.out.println("Operacao: Menor que (<)"); }
-|     <MAIORQUE >     { System.out.println("Operacao: Maior que (>)"); }
-|     <IGUALDADE >    { System.out.println("Operacao: Igualdade (==)"); }
-|     <ATRIBUICAO>    { System.out.println("Operacao: Atribuicao (:=)"); }
-|     <ACHAVES>       { System.out.println("Abre chaves: {"); }
-|     <FCHAVES>       { System.out.println("Fecha chaves: }"); }
-|     <APARENTES>     { System.out.println("Abre parentes: )"); }
-|     <FPARENTES>     { System.out.println("Fecha parentes: ("); }
-|     <PONTOEVIRGULA> { System.out.println("Ponto e virgula: ;"); }
-|     <DOISPONTOS>    { System.out.println("Dois pontos: :"); }
-|     t=<NUM>         { System.out.println("Numero: "+ t.image); }
-|     t=<ID>          { System.out.println("Identificador: "+ t.image); }
-|     t=<NUMREAL>     { System.out.println("Numero Real: "+ t.image); }
+/*
+LUGOSI -> MAIN FUNC?
+MAIN -> "main" "{" VARDECL SEQCOMANDOS "}"
+VARDECL -> VARDECL "var" TIPO TOKEN_id ";" | vazio
+TIPO -> "int" | "bool" | "float" | "void"
+SEQCOMANDOS -> SEQCOMANDOS COMANDO | vazio
+COMANDO -> TOKEN_id ":=" EXP ";"
+| TOKEN_id "(" LISTAEXP? ")" ";"
+| "if" "(" EXP ")" "{" SEQCOMANDOS "}" ";"
+| "while" "(" EXP ")" "do" "{" SEQCOMANDOS "}" ";"
+| "do" "{" SEQCOMANDOS "}" "while" "(" EXP ")" ";"
+| "return" EXP ";"
+| "print" "(" EXP ")" ";"
+EXP -> "(" EXP OP EXP ")" | FATOR
+FATOR -> TOKEN_id | TOKEN_id "(" LISTAEXP? ")"
+| TOKEN_numliteral | "true" | "false"
+OP -> "+" | "-" | "*" | "/" | "&&" | "||" | "<" | ">" | "=="
+LISTAEXP -> EXP | LISTAEXP "," EXP
+FUNC -> FUNC "function" TIPO TOKEN_id "(" LISTAARG? ")" "{" VARDECL SEQCOMANDOS "}"
+| "function" TIPO TOKEN_id "(" LISTAARG? ")" "{" VARDECL SEQCOMANDOS "}"
+LISTAARG -> TIPO TOKEN_id | LISTAARG "," TIPO TOKEN_id
+*/
 
-  )* 
-  <EOF>
+void Lugosi ()
+:
+{}
+{
+    Main() (Func())?
+    <EOF>
+}
+
+void Main ()
+:
+{}
+{
+    <MAIN> <ACHAVES> VarDecl() SeqComandos() <FCHAVES>
+}
+
+void VarDecl()
+:
+{}
+{
+    <VARIAVEL> Tipo() <ID> <PONTOEVIRGULA> VarDeclL()
+}
+void VarDeclL()
+:
+{}
+{
+    (<VARIAVEL> Tipo() <ID> <PONTOEVIRGULA> VarDeclL())?
+}
+
+void Tipo()
+:
+{}
+{
+  <INTEIRO> | <BOOLEANO> | <FLOAT> | <VOID>
+}
+
+void SeqComandos()
+:
+{}
+{
+  Comandos() SeqComandosL()
+}
+
+void SeqComandosL()
+:
+{}
+{
+  (Comandos() SeqComandosL())?
+}
+
+void Comandos()
+:
+{}
+{
+  <ID> ComandosL()
+| <IF> <APARENTES> Exp() <FPARENTES> <ACHAVES> SeqComandos() <FCHAVES> <PONTOEVIRGULA>
+| <WHILE> <APARENTES> Exp() <FPARENTES> <DO> <ACHAVES> SeqComandos() <FCHAVES> <PONTOEVIRGULA>
+| <DO> <ACHAVES> SeqComandos() <FCHAVES> <WHILE> <APARENTES> Exp() <FPARENTES>  <PONTOEVIRGULA>
+| <RETURN> Exp() <PONTOEVIRGULA>
+| <PRINT> <APARENTES> Exp() <FPARENTES> <PONTOEVIRGULA>
+}
+
+void ComandosL() :
+{}
+{
+  <ATRIBUICAO> Exp() <PONTOEVIRGULA> | <APARENTES> (ListaExp())? <FPARENTES> <PONTOEVIRGULA>
+}
+
+void Exp()
+:
+{}
+{
+  <APARENTES> Exp() Op() Exp() <FPARENTES> | Fator()
+}
+
+void Fator()
+:
+{}
+{
+  <ID> FatorL() | <NUMREAL> | <VERDADEIRO> | <FALSO>
 }
 
 
+void FatorL()
+:
+{}
+{
+  (<APARENTES> ListaExp() <FPARENTES>)?
+}
 
+void Op()
+:
+{}
+{
+  <ADICAO>
+  | <SUBTRACAO>
+  | <MULTIPLICACAO>
+  | <DIVISAO>
+  | <ELOGICO>
+  | <OULOGICO>
+  | <MENORQUE>
+  | <MAIORQUE>
+  | <IGUALDADE>
+}
 
+void ListaExp()
+:
+{}
+{
+  Exp() ListaExpL()
+}
 
+void ListaExpL() :
+{}
+{
+  (<PONTOEVIRGULA> Exp() ListaExpL())?
+}
+
+void Func() :
+{}
+{
+  <FUNCAO> Tipo() <ID> <APARENTES> (ListaArgs())? <FPARENTES>
+  <ACHAVES> VarDecl() SeqComandos() <FCHAVES> FuncL()
+}
+
+void FuncL() :
+{}
+{
+  (<FUNCAO> Tipo() <ID> <APARENTES> (ListaArgs())? <FPARENTES>
+  <ACHAVES> VarDecl() SeqComandos() <FCHAVES> FuncL())?
+}
+
+void ListaArgs() :
+{}
+{
+  Tipo() <ID> ListaArgsL()
+}
+
+void ListaArgsL() :
+{}
+{
+  <VIRGULA> Tipo() <ID> ListaArgsL()
+}
