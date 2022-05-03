@@ -1,0 +1,122 @@
+PARSER_BEGIN(Lugosi)
+import java.io.*;
+
+public class Lugosi 
+{
+  public static void main(String args[]) throws ParseException,IOException 
+  {
+    Lugosi analisador = new Lugosi(new FileInputStream(args[0]));
+    analisador.Lugosi();
+  }
+}
+
+PARSER_END(Lugosi)
+
+SKIP:
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+// PALAVRAS RESERVADAS
+TOKEN :
+{
+  <MAIN: "main">
+| <VARIAVEL: "var">
+| <INTEIRO: "int">
+| <BOOLEANO: "bool">
+| <FLOAT: "float">
+| <IF : "if">
+| <DO : "do">
+| <WHILE : "while">
+| <RETURN : "return">
+| <FUNCAO : "function">
+| <PRINT : "print">
+}
+
+// OPERACOES
+TOKEN :
+{
+  <ADICAO: "+">
+| <SUBTRACAO : "-">
+| <MULTIPLICACAO : "*">
+| <DIVISAO : "/">
+| <ELOGICO : "&&">
+| <OULOGICO : "||">
+| <MENORQUE : "<">
+| <MAIORQUE : ">">
+| <IGUALDADE : "==">
+| <ATRIBUICAO: ":=">
+}
+
+// SEPARADORES
+TOKEN :
+{
+  <ACHAVES: "{">
+| <FCHAVES: "}">
+| <APARENTES: "(">
+| <FPARENTES: ")">
+| <PONTOEVIRGULA: ";">
+| <DOISPONTOS: ":">
+}
+
+// EXPRESSÕES REGULARES
+TOKEN :
+{
+  < NUM: (["0"-"9"])+>
+| < ID: ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9"])*>
+}
+
+// EXPRESSÕES REGULARES DERIVADAS
+TOKEN :
+{
+  <FRACALOPCIONAL: (["."]<NUM>)?>
+| <EXPOENTEOPCIONAL: (["e","E"](["+","-"])?<NUM>)>
+| <NUMREAL: <NUM><FRACALOPCIONAL><EXPOENTEOPCIONAL>>
+}
+
+void Lugosi () 
+  :
+{Token t;}
+{ (
+      <MAIN>          { System.out.println("Palavra reservada: main"); }
+|     <VARIAVEL>      { System.out.println("Palavra reservada: var"); }
+|     <INTEIRO>       { System.out.println("Palavra reservada: int"); }
+|     <BOOLEANO>      { System.out.println("Palavra reservada: bool"); }
+|     <FLOAT>      { System.out.println("Palavra reservada: float"); }
+|     <IF>            { System.out.println("Palavra reservada: if"); }
+|     <DO>            { System.out.println("Palavra reservada: do"); }
+|     <WHILE >        { System.out.println("Palavra reservada: while"); }
+|     <RETURN>        { System.out.println("Palavra reservada: return"); }
+|     <FUNCAO >       { System.out.println("Palavra reservada: function"); }
+|     <PRINT >        { System.out.println("Palavra reservada: print"); }
+|     <ADICAO >       { System.out.println("Operacao: Adicao (+)"); }
+|     <SUBTRACAO >    { System.out.println("Operacao: Substracao (-)"); }
+|     <MULTIPLICACAO> { System.out.println("Operacao: Multiplicacao (*)"); }
+|     <DIVISAO >      { System.out.println("Operacao: Divisao (/)"); }
+|     <ELOGICO >      { System.out.println("Operacao: E logico (&&)"); }
+|     <OULOGICO >     { System.out.println("Operacao: OU logico (||)"); }
+|     <MENORQUE >     { System.out.println("Operacao: Menor que (<)"); }
+|     <MAIORQUE >     { System.out.println("Operacao: Maior que (>)"); }
+|     <IGUALDADE >    { System.out.println("Operacao: Igualdade (==)"); }
+|     <ATRIBUICAO>    { System.out.println("Operacao: Atribuicao (:=)"); }
+|     <ACHAVES>       { System.out.println("Abre chaves: {"); }
+|     <FCHAVES>       { System.out.println("Fecha chaves: }"); }
+|     <APARENTES>     { System.out.println("Abre parentes: )"); }
+|     <FPARENTES>     { System.out.println("Fecha parentes: ("); }
+|     <PONTOEVIRGULA> { System.out.println("Ponto e virgula: ;"); }
+|     <DOISPONTOS>    { System.out.println("Dois pontos: :"); }
+|     t=<NUM>         { System.out.println("Numero: "+ t.image); }
+|     t=<ID>          { System.out.println("Identificador: "+ t.image); }
+|     t=<NUMREAL>     { System.out.println("Numero Real: "+ t.image); }
+
+  )* 
+  <EOF>
+}
+
+
+
+
+

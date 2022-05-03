@@ -1,0 +1,17 @@
+
+function main
+{
+    var int x := 10;
+    var float y := 34.92E-23;
+    var float z := x / y;
+
+    while (z < 23.5e+28)
+    {
+        z := z + 2.3E+2;
+
+        if (z == y)
+            print(z);
+    }
+
+    return;
+}
