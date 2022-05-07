@@ -30,6 +30,7 @@ TOKEN :
 | <FLOAT: "float">
 | <VOID: "void">
 | <IF : "if">
+| <ELSE : "else">
 | <DO : "do">
 | <WHILE : "while">
 | <RETURN : "return">
@@ -69,15 +70,15 @@ TOKEN :
 // EXPRESSÕES REGULARES
 TOKEN :
 {
-  < NUM: (["0"-"9"])+>
+  <#NUM: (["0"-"9"])+>
 | < ID: ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9"])*>
 }
 
 // EXPRESSÕES REGULARES DERIVADAS
 TOKEN :
 {
-  <FRACALOPCIONAL: ( "." <NUM> )?>
-| <EXPOENTEOPCIONAL: ("E" ( "+" | "-" )? <NUM>)?>
+  <#FRACALOPCIONAL: ( "." <NUM> )?>
+| <#EXPOENTEOPCIONAL: ("E" ( "+" | "-" )? <NUM>)?>
 | <NUMREAL: <NUM> <FRACALOPCIONAL> <EXPOENTEOPCIONAL>>
 }
 
@@ -109,7 +110,10 @@ void Lugosi ()
 {}
 {
     Main() (Func())?
-    <EOF>
+    <EOF> 
+    {System.out.println("===============================");
+     System.out.println("Arquivo Corretamente escrito!!!");
+     System.out.println("===============================");}
 }
 
 void Main ()
@@ -159,6 +163,7 @@ void Comandos()
 {
   <ID> ComandosL()
 | <IF> <APARENTES> Exp() <FPARENTES> <ACHAVES> SeqComandos() <FCHAVES> <PONTOEVIRGULA>
+| <ELSE> <ACHAVES> SeqComandos() <FCHAVES> <PONTOEVIRGULA>
 | <WHILE> <APARENTES> Exp() <FPARENTES> <DO> <ACHAVES> SeqComandos() <FCHAVES> <PONTOEVIRGULA>
 | <DO> <ACHAVES> SeqComandos() <FCHAVES> <WHILE> <APARENTES> Exp() <FPARENTES>  <PONTOEVIRGULA>
 | <RETURN> Exp() <PONTOEVIRGULA>
@@ -225,14 +230,14 @@ void Func() :
 {}
 {
   <FUNCAO> Tipo() <ID> <APARENTES> (ListaArgs())? <FPARENTES>
-  <ACHAVES> VarDecl() SeqComandos() <FCHAVES> FuncL()
+  <ACHAVES> (VarDecl())? (SeqComandos())? <FCHAVES> FuncL()
 }
 
 void FuncL() :
 {}
 {
   (<FUNCAO> Tipo() <ID> <APARENTES> (ListaArgs())? <FPARENTES>
-  <ACHAVES> VarDecl() SeqComandos() <FCHAVES> FuncL())?
+   <ACHAVES> (VarDecl())? (SeqComandos())? <FCHAVES> FuncL())?
 }
 
 void ListaArgs() :
@@ -244,5 +249,5 @@ void ListaArgs() :
 void ListaArgsL() :
 {}
 {
-  <VIRGULA> Tipo() <ID> ListaArgsL()
+  (<VIRGULA> Tipo() <ID> ListaArgsL())?
 }
