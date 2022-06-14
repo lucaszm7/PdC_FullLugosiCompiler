@@ -1,14 +1,48 @@
 PARSER_BEGIN(Lugosi)
 import java.io.*;
+import java.util.ArrayList;
+
+class ArvoreSintatica
+{
+  ArrayList<Comando> arvore;
+
+  ArvoreSintatica(ArrayList ar)
+  {
+    this.arvore = ar;
+  }
+}
+
+class Comando {}
+
+class VarDecl extends Comando
+{
+  String tipo;
+  String token_id;
+
+  VarDecl(String t, String tid)
+  {this.tipo = t; this.token_id = tid;}
+}
+
+
 
 public class Lugosi 
 {
-  public static void main(String args[]) throws ParseException,IOException 
+  public static void main(String args[]) throws ParseException, IOException 
   {
-    Lugosi analisador = new Lugosi(new FileInputStream(args[0]));
-    analisador.Lugosi();
+    Lugosi parser = new Lugosi(new FileInputStream(args[0]));
+    ArvoreSintatica arvore = parser.Lugosi();
+
+    geraCodigo(arvore, args[0]);
+
   }
+
+  public static void geraCodigo(ArvoreSintatica arvore, String FileName)
+  {
+    return;
+  }
+
 }
+
 
 PARSER_END(Lugosi)
 
@@ -105,15 +139,18 @@ FUNC -> FUNC "function" TIPO TOKEN_id "(" LISTAARG? ")" "{" VARDECL SEQCOMANDOS 
 LISTAARG -> TIPO TOKEN_id | LISTAARG "," TIPO TOKEN_id
 */
 
-void Lugosi ()
+ArvoreSintatica Lugosi ()
 :
-{}
+{ArrayList arvore = new ArrayList();}
 {
     Main() (Func())?
     <EOF> 
-    {System.out.println("===============================");
-     System.out.println("Arquivo Corretamente escrito!!!");
-     System.out.println("===============================");}
+    {
+      System.out.println("===============================");
+      System.out.println("Arquivo Corretamente escrito!!!");
+      System.out.println("===============================");
+      return new ArvoreSintatica(arvore);
+    }
 }
 
 void Main ()
@@ -173,7 +210,8 @@ void Comandos()
 void ComandosL() :
 {}
 {
-  <ATRIBUICAO> Exp() <PONTOEVIRGULA> | <APARENTES> (ListaExp())? <FPARENTES> <PONTOEVIRGULA>
+  <ATRIBUICAO> Exp() <PONTOEVIRGULA> 
+| <APARENTES> (ListaExp())? <FPARENTES> <PONTOEVIRGULA>
 }
 
 void Exp()
@@ -203,14 +241,14 @@ void Op()
 {}
 {
   <ADICAO>
-  | <SUBTRACAO>
-  | <MULTIPLICACAO>
-  | <DIVISAO>
-  | <ELOGICO>
-  | <OULOGICO>
-  | <MENORQUE>
-  | <MAIORQUE>
-  | <IGUALDADE>
+| <SUBTRACAO>
+| <MULTIPLICACAO>
+| <DIVISAO>
+| <ELOGICO>
+| <OULOGICO>
+| <MENORQUE>
+| <MAIORQUE>
+| <IGUALDADE>
 }
 
 void ListaExp()
