@@ -23,7 +23,13 @@ class VarDecl extends Comando
   {this.tipo = t; this.token_id = tid;}
 }
 
+class FuncId extends Comando
+{
+  String id;
 
+  FuncId(String n)
+  {this.id = n;}
+}
 
 public class Lugosi 
 {
@@ -143,7 +149,7 @@ ArvoreSintatica Lugosi ()
 :
 {ArrayList arvore = new ArrayList();}
 {
-    Main() (Func())?
+    Main(arvore) (Func(arvore))?
     <EOF> 
     {
       System.out.println("===============================");
@@ -153,61 +159,68 @@ ArvoreSintatica Lugosi ()
     }
 }
 
-void Main ()
+void Main (ArrayList arvore)
 :
 {}
 {
-    <MAIN> <ACHAVES> VarDecl() SeqComandos() <FCHAVES>
+    <MAIN> <ACHAVES> VarDecl(arvore) SeqComandos(arvore) <FCHAVES>
 }
 
-void VarDecl()
+void VarDecl(ArrayList arvore)
 :
-{}
+{String t = null; Token id = null;}
 {
-    <VARIAVEL> Tipo() <ID> <PONTOEVIRGULA> VarDeclL()
+    <VARIAVEL> t=Tipo() id=<ID> {arvore.add(new VarDecl(t, id.image));} <PONTOEVIRGULA> VarDeclL(arvore)
 }
-void VarDeclL()
+void VarDeclL(ArrayList arvore)
 :
-{}
+{String t = null; Token id = null;}
 {
-    (<VARIAVEL> Tipo() <ID> <PONTOEVIRGULA> VarDeclL())?
-}
-
-void Tipo()
-:
-{}
-{
-  <INTEIRO> | <BOOLEANO> | <FLOAT> | <VOID>
+    (<VARIAVEL> t=Tipo() id=<ID> {arvore.add(new VarDecl(t, id.image));} <PONTOEVIRGULA> VarDeclL(arvore))?
 }
 
-void SeqComandos()
+String Tipo()
 :
-{}
+{Token t;}
 {
-  Comandos() SeqComandosL()
+(
+(t=<INTEIRO>)
+|(t=<BOOLEANO>)
+|(t=<FLOAT>)
+|(t=<VOID>)
+)
+
+{return t.image;}
 }
 
-void SeqComandosL()
+void SeqComandos(ArrayList arvore)
 :
 {}
 {
-  (Comandos() SeqComandosL())?
+  Comandos(arvore) SeqComandosL(arvore)
 }
 
-void Comandos()
+void SeqComandosL(ArrayList arvore)
 :
 {}
 {
-  <ID> ComandosL()
-| <IF> <APARENTES> Exp() <FPARENTES> <ACHAVES> SeqComandos() <FCHAVES> <PONTOEVIRGULA>
-| <ELSE> <ACHAVES> SeqComandos() <FCHAVES> <PONTOEVIRGULA>
-| <WHILE> <APARENTES> Exp() <FPARENTES> <DO> <ACHAVES> SeqComandos() <FCHAVES> <PONTOEVIRGULA>
-| <DO> <ACHAVES> SeqComandos() <FCHAVES> <WHILE> <APARENTES> Exp() <FPARENTES>  <PONTOEVIRGULA>
+  (Comandos(arvore) SeqComandosL(arvore))?
+}
+
+void Comandos(ArrayList arvore)
+:
+{}
+{
+  <ID> ComandosL(arvore)
+| <IF> <APARENTES> Exp() <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>
+| <ELSE> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>
+| <WHILE> <APARENTES> Exp() <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>
+| <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <WHILE> <APARENTES> Exp() <FPARENTES>  <PONTOEVIRGULA>
 | <RETURN> Exp() <PONTOEVIRGULA>
 | <PRINT> <APARENTES> Exp() <FPARENTES> <PONTOEVIRGULA>
 }
 
-void ComandosL() :
+void ComandosL(ArrayList arvore) :
 {}
 {
   <ATRIBUICAO> Exp() <PONTOEVIRGULA> 
@@ -238,7 +251,7 @@ void FatorL()
 
 void Op()
 :
-{}
+{Token op;}
 {
   <ADICAO>
 | <SUBTRACAO>
@@ -264,28 +277,28 @@ void ListaExpL() :
   (<PONTOEVIRGULA> Exp() ListaExpL())?
 }
 
-void Func() :
-{}
+void Func(ArrayList arvore) :
+{String t;}
 {
-  <FUNCAO> Tipo() <ID> <APARENTES> (ListaArgs())? <FPARENTES>
-  <ACHAVES> (VarDecl())? (SeqComandos())? <FCHAVES> FuncL()
+  <FUNCAO> t=Tipo() {arvore.add(new FuncId(t));} <ID> <APARENTES> (ListaArgs(arvore))? <FPARENTES>
+  <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> FuncL(arvore)
 }
 
-void FuncL() :
-{}
+void FuncL(ArrayList arvore) :
+{String t;}
 {
-  (<FUNCAO> Tipo() <ID> <APARENTES> (ListaArgs())? <FPARENTES>
-   <ACHAVES> (VarDecl())? (SeqComandos())? <FCHAVES> FuncL())?
+  (<FUNCAO> t=Tipo() {arvore.add(new FuncId(t));} <ID> <APARENTES> (ListaArgs(arvore))? <FPARENTES>
+   <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> FuncL(arvore))?
 }
 
-void ListaArgs() :
-{}
+void ListaArgs(ArrayList arvore) :
+{String t;}
 {
-  Tipo() <ID> ListaArgsL()
+  t=Tipo() {arvore.add(new FuncId(t));} <ID> ListaArgsL(arvore)
 }
 
-void ListaArgsL() :
-{}
+void ListaArgsL(ArrayList arvore) :
+{String t;}
 {
-  (<VIRGULA> Tipo() <ID> ListaArgsL())?
+  (<VIRGULA> t=Tipo() {arvore.add(new FuncId(t));} <ID> ListaArgsL(arvore))?
 }
