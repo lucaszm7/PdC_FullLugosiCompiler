@@ -12,7 +12,60 @@ class ArvoreSintatica
   }
 }
 
-class Comando {}
+abstract class Comando 
+{
+  abstract public String toString(); 
+}
+
+abstract class Exp extends Comando
+{
+  public Exp exp;
+
+  // toString()
+}
+
+class NumReal extends Exp
+{
+  String numReal;
+
+  NumReal(String nNum)
+  {this.numReal = nNum;}
+
+  public String toString()
+  {return numReal;}
+}
+
+class Verdadeiro extends Exp
+{
+  Verdadeiro()
+  {}
+
+  public String toString()
+  {return "";}
+}
+
+class Falso extends Exp
+{
+  Falso()
+  {}
+
+  public String toString()
+  {return "";}
+}
+
+class Atrib extends Comando
+{
+  String id;
+  Exp exp;
+
+  Atrib(String nId, Exp nExp)
+  {this.id = nId; this.exp = nExp;}
+
+  public String toString()
+  {
+    return id + " = " + exp.toString();
+  }
+}
 
 class VarDecl extends Comando
 {
@@ -21,6 +74,11 @@ class VarDecl extends Comando
 
   VarDecl(String t, String tid)
   {this.tipo = t; this.token_id = tid;}
+
+  public String toString()
+  {
+    return this.tipo + " " + this.token_id;
+  }
 }
 
 class FuncId extends Comando
@@ -29,6 +87,46 @@ class FuncId extends Comando
 
   FuncId(String n)
   {this.id = n;}
+
+  public String toString()
+  {
+    return this.id;
+  }
+}
+
+class CondIf extends Comando
+{
+  public String toString()
+  {return " - ";}
+}
+class CondElse extends Comando
+{
+  public String toString()
+  {return " - ";}
+}
+class While extends Comando
+{
+  Exp exp;
+  public String toString()
+  {return " - ";}
+}
+class Do extends Comando
+{
+  Exp exp;
+  public String toString()
+  {return " - ";}
+}
+class Return extends Comando
+{
+  Exp exp;
+  public String toString()
+  {return " - ";}
+}
+class Print extends Comando
+{
+  Exp exp;
+  public String toString()
+  {return " - ";}
 }
 
 public class Lugosi 
@@ -44,6 +142,10 @@ public class Lugosi
 
   public static void geraCodigo(ArvoreSintatica arvore, String FileName)
   {
+    for(Comando v : arvore.arvore)
+    {
+      System.out.println(v.toString());
+    }
     return;
   }
 
@@ -262,26 +364,30 @@ void FatorL()
   (<APARENTES> ListaExp() <FPARENTES>)?
 }
 
-void Op()
+String Op()
 :
-{Token op;}
+{Token t;}
 {
-  <ADICAO>
-| <SUBTRACAO>
-| <MULTIPLICACAO>
-| <DIVISAO>
-| <ELOGICO>
-| <OULOGICO>
-| <MENORQUE>
-| <MAIORQUE>
-| <IGUALDADE>
+(
+  (t=<ADICAO>)
+| (t=<SUBTRACAO>)
+| (t=<MULTIPLICACAO>)
+| (t=<DIVISAO>)
+| (t=<ELOGICO>)
+| (t=<OULOGICO>)
+| (t=<MENORQUE>)
+| (t=<MAIORQUE>)
+| (t=<IGUALDADE>)
+)
+  {return t.image;}
 }
 
-void ListaExp()
+Exp ListaExp()
 :
-{}
+{Exp exp=null;}
 {
-  Exp() ListaExpL()
+  (exp=Exp() ListaExpL())
+  {return exp;}
 }
 
 void ListaExpL() :
@@ -291,27 +397,27 @@ void ListaExpL() :
 }
 
 void Func(ArrayList arvore) :
-{String t;}
+{String t=null;}
 {
   <FUNCAO> t=Tipo() {arvore.add(new FuncId(t));} <ID> <APARENTES> (ListaArgs(arvore))? <FPARENTES>
   <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> FuncL(arvore)
 }
 
 void FuncL(ArrayList arvore) :
-{String t;}
+{String t=null;}
 {
   (<FUNCAO> t=Tipo() {arvore.add(new FuncId(t));} <ID> <APARENTES> (ListaArgs(arvore))? <FPARENTES>
    <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> FuncL(arvore))?
 }
 
 void ListaArgs(ArrayList arvore) :
-{String t;}
+{String t=null;}
 {
   t=Tipo() {arvore.add(new FuncId(t));} <ID> ListaArgsL(arvore)
 }
 
 void ListaArgsL(ArrayList arvore) :
-{String t;}
+{String t=null;}
 {
   (<VIRGULA> t=Tipo() {arvore.add(new FuncId(t));} <ID> ListaArgsL(arvore))?
 }
