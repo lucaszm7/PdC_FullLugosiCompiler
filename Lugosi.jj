@@ -25,6 +25,26 @@ class Exp extends Comando
   {return "";}
 }
 
+class Var extends Exp
+{
+  String id;
+
+  Var(String id)
+  {this.id = id;}
+
+  public String toString()
+  {
+    if(exp != null)
+    {
+      return id + " " + exp.toString();
+    }
+    else
+    {
+      return id;
+    }
+  }
+}
+
 class NumReal extends Exp
 {
   String numReal;
@@ -71,7 +91,16 @@ class Verdadeiro extends Exp
   {}
 
   public String toString()
-  {return "";}
+  {
+    if(exp != null)
+    {
+      return "true" + " " + exp.toString();
+    }
+    else
+    {
+      return "true";
+    }
+  }
 }
 
 class Falso extends Exp
@@ -80,8 +109,39 @@ class Falso extends Exp
   {}
 
   public String toString()
-  {return "";}
+  {
+    if(exp != null)
+    {
+      return "false" + " " + exp.toString();
+    }
+    else
+    {
+      return "false";
+    }
+  }
 }
+
+class FuncCall extends Exp
+{
+  String id;
+
+
+  FuncCall(String id, Exp exp)
+  {this.id = id; this.exp = exp;}
+
+  public String toString()
+  {
+    if(exp != null)
+    {
+      return id + "(" + exp.toString() + ")";
+    }
+    else
+    {
+      return id + "()";
+    }
+  }
+}
+
 
 class Atrib extends Comando
 {
@@ -113,16 +173,30 @@ class VarDecl extends Comando
 
 class FuncId extends Comando
 {
+  String tipo;
   String id;
+  ArrayList<VarDecl> args;
 
-  FuncId(String n)
-  {this.id = n;}
+  FuncId(String t, String id, ArrayList<VarDecl> args)
+  {
+    this.tipo = t;
+    this.id = id;
+    this.args = args;
+  }
 
   public String toString()
   {
-    return this.id;
+    String result = this.tipo + " " + this.id + "(";
+    for(VarDecl s : this.args)
+    {
+      result += s.toString() + ", ";
+    }
+    result += "void n=null";
+    result += ")";
+    return result;
   }
 }
+
 
 class CondIf extends Comando
 {
@@ -132,14 +206,14 @@ class CondIf extends Comando
   {this.exp = exp;}
 
   public String toString()
-  {return "if(" + exp.toString() + ")";}
+  {return "if (" + exp.toString() + ")";}
 }
 class CondElse extends Comando
 {
   CondElse(){}
 
   public String toString()
-  {return " - ";}
+  {return "else";}
 }
 class While extends Comando
 {
@@ -149,7 +223,7 @@ class While extends Comando
   {this.exp = exp;}
 
   public String toString()
-  {return " - ";}
+  {return "while(" + exp.toString() + ") do ";}
 }
 class Do extends Comando
 {
@@ -161,6 +235,7 @@ class Do extends Comando
   public String toString()
   {return " - ";}
 }
+
 class Return extends Comando
 {
   Exp exp;
@@ -169,8 +244,18 @@ class Return extends Comando
   {this.exp = exp;}
   
   public String toString()
-  {return " - ";}
+  {
+    if(exp != null)
+    {
+      return "return " + exp.toString();
+    }
+    else
+    {
+      return "return";
+    }
+  }
 }
+
 class Print extends Comando
 {
   Exp exp;
@@ -179,7 +264,16 @@ class Print extends Comando
   {this.exp = exp;}
 
   public String toString()
-  {return " - ";}
+  {
+    if(exp != null)
+    {
+      return "print(" + exp.toString() + ")";
+    }
+    else
+    {
+      return "print()";
+    }
+  }
 }
 
 public class Lugosi 
@@ -368,7 +462,7 @@ void Comandos(ArrayList arvore)
  Exp exp=null; CondIf condif=null; CondElse condelse=null; While cwhile=null; 
  Do cDo=null; Return cReturn=null; Print cprint=null;}
 {
-  (t=<ID> exp=ComandosL(arvore) {arvore.add(new Atrib(t.image, exp));})
+  (t=<ID> exp=ComandosL(t.image, arvore))
 | (<IF> <APARENTES> exp=Exp() {arvore.add(new CondIf(exp));} <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>)
 | (<ELSE> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> {arvore.add(new CondElse());})
 | (<WHILE> <APARENTES> exp=Exp() {arvore.add(new While(exp));} <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> )
@@ -377,12 +471,12 @@ void Comandos(ArrayList arvore)
 | (<PRINT> <APARENTES> exp=Exp() {arvore.add(new Print(exp));} <FPARENTES> <PONTOEVIRGULA> )
 }
 
-Exp ComandosL(ArrayList arvore) :
+Exp ComandosL(String id, ArrayList arvore) :
 {Exp exp=null;}
 {
 (
-  (<ATRIBUICAO> exp=Exp() <PONTOEVIRGULA>)
-| (<APARENTES> (exp=ListaExp())? <FPARENTES> <PONTOEVIRGULA>)
+  (<ATRIBUICAO> exp=Exp() <PONTOEVIRGULA> {arvore.add(new Atrib(id, exp));})
+| (<APARENTES> (exp=ListaExp())? <FPARENTES> <PONTOEVIRGULA> {arvore.add(new FuncCall(id, exp));})
 )
 {return exp;}
 }
@@ -403,18 +497,28 @@ Exp Fator()
 {Exp exp=null; Token t;
  NumReal nreal=null; Verdadeiro v=null; Falso f=null;}
 {
-  (t=<ID> FatorL() {return new NumReal(t.image);})
+  (t=<ID> exp=FatorL() {
+    if(exp != null)
+    {
+      return new FuncCall(t.image, exp);
+    }
+    else
+    {
+      return new Var(t.image);
+    }
+  })
 | (t=<NUMREAL> {return new NumReal(t.image);})
 | (<VERDADEIRO> {return new Verdadeiro();})
 | (<FALSO> {return new Falso();})
 }
 
 
-void FatorL()
+Exp FatorL()
 :
-{}
+{Exp exp=null;}
 {
-  (<APARENTES> ListaExp() <FPARENTES>)?
+  (<APARENTES> exp=ListaExp() <FPARENTES>)?
+  {return exp;}
 }
 
 Exp Op()
@@ -448,32 +552,32 @@ Exp ListaExpL() :
 {
   (
     (<PONTOEVIRGULA> exp=Exp() exp.exp=ListaExpL())
-    {return exp;}
   )?
+    {return exp;}
 }
 
 void Func(ArrayList arvore) :
-{String t=null;}
+{String t=null; Token id; ArrayList<VarDecl> lArgs = new ArrayList();}
 {
-  <FUNCAO> t=Tipo() {arvore.add(new FuncId(t));} <ID> <APARENTES> (ListaArgs(arvore))? <FPARENTES>
+  <FUNCAO> t=Tipo() id=<ID> <APARENTES> (ListaArgs(lArgs))? {arvore.add(new FuncId(t, id.image, lArgs));} <FPARENTES>
   <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> FuncL(arvore)
 }
 
 void FuncL(ArrayList arvore) :
-{String t=null;}
+{String t=null; Token id; ArrayList<VarDecl> lArgs = new ArrayList();}
 {
-  (<FUNCAO> t=Tipo() {arvore.add(new FuncId(t));} <ID> <APARENTES> (ListaArgs(arvore))? <FPARENTES>
+  (<FUNCAO> t=Tipo() id=<ID> <APARENTES> (ListaArgs(lArgs))? {arvore.add(new FuncId(t, id.image, lArgs));} <FPARENTES>
    <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> FuncL(arvore))?
 }
 
-void ListaArgs(ArrayList arvore) :
-{String t=null;}
+void ListaArgs(ArrayList<VarDecl> lArgs) :
+{String t=null; Token id;}
 {
-  t=Tipo() {arvore.add(new FuncId(t));} <ID> ListaArgsL(arvore)
+  t=Tipo() id=<ID> {lArgs.add(new VarDecl(t, id.image));} ListaArgsL(lArgs)
 }
 
-void ListaArgsL(ArrayList arvore) :
-{String t=null;}
+void ListaArgsL(ArrayList<VarDecl> lArgs) :
+{String t=null; Token id;}
 {
-  (<VIRGULA> t=Tipo() {arvore.add(new FuncId(t));} <ID> ListaArgsL(arvore))?
+  (<VIRGULA> t=Tipo() id=<ID> {lArgs.add(new VarDecl(t, id.image));} ListaArgsL(lArgs))?
 }
