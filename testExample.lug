@@ -10,4 +10,15 @@ main
     {
         y := 20;
     };
+
+    while((y > 1)) 
+    do
+    {
+        y := (y + 1);
+    };
+}
+
+function void tet(int n)
+{
+    return 3;
 }
