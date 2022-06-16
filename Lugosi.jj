@@ -1,5 +1,7 @@
 PARSER_BEGIN(Lugosi)
+
 import java.io.*;
+import java.io.IOException;
 import java.util.ArrayList;
 
 class ArvoreSintatica
@@ -191,12 +193,18 @@ class FuncId extends Comando
     {
       result += s.toString() + ", ";
     }
-    result += "void n=null";
+    result = result.substring(0, result.length() - 2);
     result += ")";
     return result;
   }
 }
 
+class fChaves extends Comando
+{
+  fChaves() {}
+  public String toString()
+  {return "}";}
+}
 
 class CondIf extends Comando
 {
@@ -213,7 +221,7 @@ class CondElse extends Comando
   CondElse(){}
 
   public String toString()
-  {return "else";}
+  {return "else ";}
 }
 class While extends Comando
 {
@@ -223,7 +231,7 @@ class While extends Comando
   {this.exp = exp;}
 
   public String toString()
-  {return "while(" + exp.toString() + ") do ";}
+  {return "while(" + exp.toString() + ")";}
 }
 class Do extends Comando
 {
@@ -267,11 +275,11 @@ class Print extends Comando
   {
     if(exp != null)
     {
-      return "print(" + exp.toString() + ")";
+      return "System.out.println(" + exp.toString() + ")";
     }
     else
     {
-      return "print()";
+      return "System.out.println()";
     }
   }
 }
@@ -287,11 +295,104 @@ public class Lugosi
 
   }
 
-  public static void geraCodigo(ArvoreSintatica arvore, String FileName)
+  public static void geraCodigo(ArvoreSintatica arvore, String FullFileName)
   {
     for(Comando v : arvore.arvore)
     {
       System.out.println(v.toString());
+    }
+
+    
+    try{
+      String FileName = FullFileName.substring(0, FullFileName.indexOf("."));
+      FileWriter fw = new FileWriter(FileName + ".java");
+      String FileContent = new String();
+
+      FileContent += "import java.io.*\n;";
+      FileContent += "import java.io.IOException;\n";
+      FileContent += "import java.util.ArrayList;\n\n";
+      FileContent += "public class " + FileName + "{\n\t";
+      FileContent += "public static void main(String args[]) {\n";
+      
+      int ident = 2;
+
+      for(Comando c : arvore.arvore)
+      {
+        if(c instanceof CondIf)
+        {
+          for (int i = 0; i < ident; ++i)
+          {
+            FileContent += "\t";
+          }
+          FileContent += c.toString() + " {\n";
+          ident++;
+        }
+        else if (c instanceof CondElse)
+        {
+          for (int i = 0; i < ident; ++i)
+          {
+            FileContent += "\t";
+          }
+          FileContent += c.toString() + " {\n";
+          ident++;
+        }
+
+        else if (c instanceof While)
+        {
+          for (int i = 0; i < ident; ++i)
+          {
+            FileContent += "\t";
+          }
+          FileContent += c.toString() + "{\n";
+          ident++;
+        }
+
+        else if (c instanceof CondElse)
+        {
+          for (int i = 0; i < ident; ++i)
+          {
+            FileContent += "\t";
+          }
+          FileContent += c.toString() + "{\n";
+          ident++;
+        }
+
+        else if (c instanceof FuncId)
+        {
+          for (int i = 0; i < ident; ++i)
+          {
+            FileContent += "\t";
+          }
+          FileContent += "public static " +  c.toString() + "{\n";
+          ident++;
+        }
+        else if (c instanceof fChaves)
+        {
+          ident--;
+          for (int i = 0; i < ident; ++i)
+          {
+            FileContent += "\t";
+          }
+          FileContent += c.toString() + "\n";
+        }
+        else
+        {
+          for (int i = 0; i < ident; ++i)
+          {
+            FileContent += "\t";
+          }
+          FileContent += c.toString() + ";\n";
+        }
+      }
+
+      FileContent += "}";
+
+      fw.write(FileContent);
+      fw.close();
+    }
+    catch (IOException e) {
+      System.out.println("An error occurred.");
+      e.printStackTrace();
     }
     return;
   }
@@ -412,8 +513,8 @@ void Main (ArrayList arvore)
 :
 {}
 {
-    <MAIN> <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES>
-}
+    <MAIN> <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> {arvore.add(new fChaves());}
+} 
 
 void VarDecl(ArrayList arvore)
 :
@@ -463,10 +564,10 @@ void Comandos(ArrayList arvore)
  Do cDo=null; Return cReturn=null; Print cprint=null;}
 {
   (t=<ID> exp=ComandosL(t.image, arvore))
-| (<IF> <APARENTES> exp=Exp() {arvore.add(new CondIf(exp));} <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>)
-| (<ELSE> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> {arvore.add(new CondElse());})
-| (<WHILE> <APARENTES> exp=Exp() {arvore.add(new While(exp));} <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> )
-| (<DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <WHILE> <APARENTES> exp=Exp() {arvore.add(new Do(exp));} <FPARENTES>  <PONTOEVIRGULA> )
+| (<IF> <APARENTES> exp=Exp() {arvore.add(new CondIf(exp));} <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> {arvore.add(new fChaves());} <PONTOEVIRGULA>)
+| (<ELSE> {arvore.add(new CondElse());} <ACHAVES> SeqComandos(arvore) <FCHAVES> {arvore.add(new fChaves());} <PONTOEVIRGULA> )
+| (<WHILE> <APARENTES> exp=Exp() {arvore.add(new While(exp));} <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> {arvore.add(new fChaves());} <PONTOEVIRGULA> )
+| (<DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> {arvore.add(new fChaves());} <WHILE> <APARENTES> exp=Exp() {arvore.add(new Do(exp));} <FPARENTES>  <PONTOEVIRGULA> )
 | (<RETURN> exp=Exp() {arvore.add(new Return(exp));} <PONTOEVIRGULA> )
 | (<PRINT> <APARENTES> exp=Exp() {arvore.add(new Print(exp));} <FPARENTES> <PONTOEVIRGULA> )
 }
@@ -480,6 +581,7 @@ Exp ComandosL(String id, ArrayList arvore) :
 )
 {return exp;}
 }
+
 
 Exp Exp() 
 :
@@ -560,14 +662,14 @@ void Func(ArrayList arvore) :
 {String t=null; Token id; ArrayList<VarDecl> lArgs = new ArrayList();}
 {
   <FUNCAO> t=Tipo() id=<ID> <APARENTES> (ListaArgs(lArgs))? {arvore.add(new FuncId(t, id.image, lArgs));} <FPARENTES>
-  <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> FuncL(arvore)
+  <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> {arvore.add(new fChaves());} FuncL(arvore)
 }
 
 void FuncL(ArrayList arvore) :
 {String t=null; Token id; ArrayList<VarDecl> lArgs = new ArrayList();}
 {
   (<FUNCAO> t=Tipo() id=<ID> <APARENTES> (ListaArgs(lArgs))? {arvore.add(new FuncId(t, id.image, lArgs));} <FPARENTES>
-   <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> FuncL(arvore))?
+   <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES> {arvore.add(new fChaves());} FuncL(arvore))?
 }
 
 void ListaArgs(ArrayList<VarDecl> lArgs) :

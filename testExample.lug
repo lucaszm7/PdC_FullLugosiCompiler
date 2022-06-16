@@ -2,23 +2,31 @@ main
 {
     var int x;
     var float y;
-    var bool z;
+    var float z;
+
+    var float zz;
 
     x := 10;
+    y := 20;
+    z := 30;
 
-    if((x > 10))
+    zz := sqrt(z);
+
+    if((x > 20))
     {
-        y := 20;
+        y := (x + 20);
     };
 
-    while((y > 1)) 
-    do
+    while((y > 1)) do
     {
-        y := (y + 1);
+        z := (zz + y);
+        y := (y - 1);
     };
+
+    print(z);
 }
 
-function void tet(int n)
+function float sqrt(float n)
 {
-    return 3;
+    return (n * n);
 }
