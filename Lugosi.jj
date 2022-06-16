@@ -17,11 +17,12 @@ abstract class Comando
   abstract public String toString(); 
 }
 
-abstract class Exp extends Comando
+class Exp extends Comando
 {
   public Exp exp;
 
-  // toString()
+  public String toString()
+  {return "";}
 }
 
 class NumReal extends Exp
@@ -32,7 +33,36 @@ class NumReal extends Exp
   {this.numReal = nNum;}
 
   public String toString()
-  {return numReal;}
+  {
+    if(exp != null)
+    {
+      return numReal + " " + exp.toString();
+    }
+    else
+    {
+      return numReal;
+    }
+  }
+}
+
+class Opt extends Exp
+{
+  String opt;
+
+  Opt(String opt)
+  {this.opt = opt;}
+
+  public String toString()
+  {
+    if(exp != null)
+    {
+      return opt + " " + exp.toString();
+    }
+    else
+    {
+      return opt;
+    }
+  }
 }
 
 class Verdadeiro extends Exp
@@ -96,35 +126,58 @@ class FuncId extends Comando
 
 class CondIf extends Comando
 {
+  Exp exp;
+  
+  CondIf(Exp exp)
+  {this.exp = exp;}
+
   public String toString()
-  {return " - ";}
+  {return "if(" + exp.toString() + ")";}
 }
 class CondElse extends Comando
 {
+  CondElse(){}
+
   public String toString()
   {return " - ";}
 }
 class While extends Comando
 {
   Exp exp;
+
+  While(Exp exp)
+  {this.exp = exp;}
+
   public String toString()
   {return " - ";}
 }
 class Do extends Comando
 {
   Exp exp;
+
+  Do(Exp exp)
+  {this.exp = exp;}
+
   public String toString()
   {return " - ";}
 }
 class Return extends Comando
 {
   Exp exp;
+ 
+  Return(Exp exp)
+  {this.exp = exp;}
+  
   public String toString()
   {return " - ";}
 }
 class Print extends Comando
 {
   Exp exp;
+
+  Print(Exp exp)
+  {this.exp = exp;}
+
   public String toString()
   {return " - ";}
 }
@@ -312,16 +365,16 @@ void SeqComandosL(ArrayList arvore)
 void Comandos(ArrayList arvore)
 :
 {Token t;
- Exp atrib=null; CondIf condif=null; CondElse condelse=null; While cwhile=null; 
+ Exp exp=null; CondIf condif=null; CondElse condelse=null; While cwhile=null; 
  Do cDo=null; Return cReturn=null; Print cprint=null;}
 {
-  (t=<ID> atrib=ComandosL(arvore) {arvore.add(new Atrib(t.image, atrib));})
-| (<IF> <APARENTES> Exp() <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>)
-| (<ELSE> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>)
-| (<WHILE> <APARENTES> Exp() <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>)
-| (<DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <WHILE> <APARENTES> Exp() <FPARENTES>  <PONTOEVIRGULA>)
-| (<RETURN> Exp() <PONTOEVIRGULA>)
-| (<PRINT> <APARENTES> Exp() <FPARENTES> <PONTOEVIRGULA>)
+  (t=<ID> exp=ComandosL(arvore) {arvore.add(new Atrib(t.image, exp));})
+| (<IF> <APARENTES> exp=Exp() <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> {arvore.add(new CondIf(exp));})
+| (<ELSE> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> {arvore.add(new CondElse());})
+| (<WHILE> <APARENTES> exp=Exp() <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> {arvore.add(new While(exp));})
+| (<DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <WHILE> <APARENTES> exp=Exp() <FPARENTES>  <PONTOEVIRGULA> {arvore.add(new Do(exp));})
+| (<RETURN> exp=Exp() <PONTOEVIRGULA> {arvore.add(new Return(exp));})
+| (<PRINT> <APARENTES> exp=Exp() <FPARENTES> <PONTOEVIRGULA> {arvore.add(new Print(exp));})
 }
 
 Exp ComandosL(ArrayList arvore) :
@@ -339,7 +392,7 @@ Exp Exp()
 {String t=null; Exp exp=null;}
 {
 (
-  (<APARENTES> exp=Exp() t=Op() exp.exp=Exp() <FPARENTES>) 
+  (<APARENTES> exp=Exp() exp.exp=Op() exp.exp.exp=Exp() <FPARENTES>) 
 | (exp=Fator())
 )
 {return exp;}
@@ -364,7 +417,7 @@ void FatorL()
   (<APARENTES> ListaExp() <FPARENTES>)?
 }
 
-String Op()
+Exp Op()
 :
 {Token t;}
 {
@@ -379,7 +432,7 @@ String Op()
 | (t=<MAIORQUE>)
 | (t=<IGUALDADE>)
 )
-  {return t.image;}
+  {return new Opt(t.image);}
 }
 
 Exp ListaExp()
