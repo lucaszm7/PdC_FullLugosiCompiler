@@ -163,7 +163,7 @@ void Main (ArrayList arvore)
 :
 {}
 {
-    <MAIN> <ACHAVES> VarDecl(arvore) SeqComandos(arvore) <FCHAVES>
+    <MAIN> <ACHAVES> (VarDecl(arvore))? (SeqComandos(arvore))? <FCHAVES>
 }
 
 void VarDecl(ArrayList arvore)
@@ -184,10 +184,10 @@ String Tipo()
 {Token t;}
 {
 (
-(t=<INTEIRO>)
-|(t=<BOOLEANO>)
-|(t=<FLOAT>)
-|(t=<VOID>)
+  (t=<INTEIRO>)
+| (t=<BOOLEANO>)
+| (t=<FLOAT>)
+| (t=<VOID>)
 )
 
 {return t.image;}
