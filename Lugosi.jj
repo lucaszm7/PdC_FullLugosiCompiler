@@ -209,36 +209,49 @@ void SeqComandosL(ArrayList arvore)
 
 void Comandos(ArrayList arvore)
 :
-{}
+{Token t;
+ Exp atrib=null; CondIf condif=null; CondElse condelse=null; While cwhile=null; 
+ Do cDo=null; Return cReturn=null; Print cprint=null;}
 {
-  <ID> ComandosL(arvore)
-| <IF> <APARENTES> Exp() <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>
-| <ELSE> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>
-| <WHILE> <APARENTES> Exp() <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>
-| <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <WHILE> <APARENTES> Exp() <FPARENTES>  <PONTOEVIRGULA>
-| <RETURN> Exp() <PONTOEVIRGULA>
-| <PRINT> <APARENTES> Exp() <FPARENTES> <PONTOEVIRGULA>
+  (t=<ID> atrib=ComandosL(arvore) {arvore.add(new Atrib(t.image, atrib));})
+| (<IF> <APARENTES> Exp() <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>)
+| (<ELSE> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>)
+| (<WHILE> <APARENTES> Exp() <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>)
+| (<DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <WHILE> <APARENTES> Exp() <FPARENTES>  <PONTOEVIRGULA>)
+| (<RETURN> Exp() <PONTOEVIRGULA>)
+| (<PRINT> <APARENTES> Exp() <FPARENTES> <PONTOEVIRGULA>)
 }
 
-void ComandosL(ArrayList arvore) :
-{}
+Exp ComandosL(ArrayList arvore) :
+{Exp exp=null;}
 {
-  <ATRIBUICAO> Exp() <PONTOEVIRGULA> 
-| <APARENTES> (ListaExp())? <FPARENTES> <PONTOEVIRGULA>
+(
+  (<ATRIBUICAO> exp=Exp() <PONTOEVIRGULA>)
+| (<APARENTES> (exp=ListaExp())? <FPARENTES> <PONTOEVIRGULA>)
+)
+{return exp;}
 }
 
-void Exp()
+Exp Exp() 
 :
-{}
+{String t=null; Exp exp=null;}
 {
-  <APARENTES> Exp() Op() Exp() <FPARENTES> | Fator()
+(
+  (<APARENTES> exp=Exp() t=Op() exp.exp=Exp() <FPARENTES>) 
+| (exp=Fator())
+)
+{return exp;}
 }
 
-void Fator()
+Exp Fator()
 :
-{}
+{Exp exp=null; Token t;
+ NumReal nreal=null; Verdadeiro v=null; Falso f=null;}
 {
-  <ID> FatorL() | <NUMREAL> | <VERDADEIRO> | <FALSO>
+  (t=<ID> FatorL() {return new NumReal(t.image);})
+| (t=<NUMREAL> {return new NumReal(t.image);})
+| (<VERDADEIRO> {return new Verdadeiro();})
+| (<FALSO> {return new Falso();})
 }
 
 
