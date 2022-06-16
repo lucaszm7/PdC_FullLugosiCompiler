@@ -369,12 +369,12 @@ void Comandos(ArrayList arvore)
  Do cDo=null; Return cReturn=null; Print cprint=null;}
 {
   (t=<ID> exp=ComandosL(arvore) {arvore.add(new Atrib(t.image, exp));})
-| (<IF> <APARENTES> exp=Exp() <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> {arvore.add(new CondIf(exp));})
+| (<IF> <APARENTES> exp=Exp() {arvore.add(new CondIf(exp));} <FPARENTES> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA>)
 | (<ELSE> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> {arvore.add(new CondElse());})
-| (<WHILE> <APARENTES> exp=Exp() <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> {arvore.add(new While(exp));})
-| (<DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <WHILE> <APARENTES> exp=Exp() <FPARENTES>  <PONTOEVIRGULA> {arvore.add(new Do(exp));})
-| (<RETURN> exp=Exp() <PONTOEVIRGULA> {arvore.add(new Return(exp));})
-| (<PRINT> <APARENTES> exp=Exp() <FPARENTES> <PONTOEVIRGULA> {arvore.add(new Print(exp));})
+| (<WHILE> <APARENTES> exp=Exp() {arvore.add(new While(exp));} <FPARENTES> <DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <PONTOEVIRGULA> )
+| (<DO> <ACHAVES> SeqComandos(arvore) <FCHAVES> <WHILE> <APARENTES> exp=Exp() {arvore.add(new Do(exp));} <FPARENTES>  <PONTOEVIRGULA> )
+| (<RETURN> exp=Exp() {arvore.add(new Return(exp));} <PONTOEVIRGULA> )
+| (<PRINT> <APARENTES> exp=Exp() {arvore.add(new Print(exp));} <FPARENTES> <PONTOEVIRGULA> )
 }
 
 Exp ComandosL(ArrayList arvore) :
@@ -439,14 +439,17 @@ Exp ListaExp()
 :
 {Exp exp=null;}
 {
-  (exp=Exp() ListaExpL())
+  (exp=Exp() exp.exp=ListaExpL())
   {return exp;}
 }
 
-void ListaExpL() :
-{}
+Exp ListaExpL() :
+{Exp exp=null;}
 {
-  (<PONTOEVIRGULA> Exp() ListaExpL())?
+  (
+    (<PONTOEVIRGULA> exp=Exp() exp.exp=ListaExpL())
+    {return exp;}
+  )?
 }
 
 void Func(ArrayList arvore) :
